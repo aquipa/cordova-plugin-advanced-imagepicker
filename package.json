@@ -1,6 +1,6 @@
 {
   "name": "cordova-plugin-advanced-imagepicker",
-  "version": "1.5.6",
+  "version": "1.5.7",
   "description": "Cordova Plugin for an advanced (multiple) ImagePicker",
   "devDependencies": {
     "@commitlint/config-conventional": "13.2.0",
@@ -23,7 +23,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/EinfachHans/cordova-plugin-advanced-imagepicker.git"
+    "url": "git+https://github.com/dimitriadamou/cordova-plugin-advanced-imagepicker.git"
   },
   "keywords": [
     "ecosystem:cordova",
@@ -39,12 +39,12 @@
     "file",
     "chooser"
   ],
-  "author": "EinfachHans",
+  "author": "DimitriAdamou",
   "license": "MIT",
   "main": "./src/typings/index.js",
   "types": "./src/typings/index.d.ts",
   "bugs": {
-    "url": "https://github.com/EinfachHans/cordova-plugin-advanced-imagepicker/issues"
+    "url": "https://github.com/dimitriadamou/cordova-plugin-advanced-imagepicker/issues"
   },
-  "homepage": "https://github.com/EinfachHans/cordova-plugin-advanced-imagepicker"
+  "homepage": "https://github.com/dimitriadamou/cordova-plugin-advanced-imagepicker"
 }
