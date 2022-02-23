@@ -28,8 +28,8 @@
     
 - (void)viewDidLoad {
     //init config
-    self.maxSelectCount=self.maxSelectCount>0?self.maxSelectCount:15;
-    self.maxSelectSize=self.maxSelectSize>0?self.maxSelectSize:1048576;
+    self.maxSelectCount=self.maxSelectCount>0?self.maxSelectCount:40;
+    self.maxSelectSize=self.maxSelectSize>0?self.maxSelectSize:104857600;
     self.selectMode=self.selectMode>0?self.selectMode:101;
     //config end
     
