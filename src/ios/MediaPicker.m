@@ -12,8 +12,9 @@
 - (void)present:(CDVInvokedUrlCommand*)command;
 - (void)takePhoto:(CDVInvokedUrlCommand*)command;
 - (void)extractThumbnail:(CDVInvokedUrlCommand*)command;
-- (NSData *)processImage:(NSData *)imageData;
+- (NSData *)processImage:(NSData*)imageData;
 
+//writeToFile:(NSString *)path options:(NSDataWritingOptions)writeOptionsMask error:(NSError **)errorPtr;
 @end
 
 @implementation AdvancedImagePicker
@@ -24,7 +25,8 @@
     NSDictionary *options = [command.arguments objectAtIndex: 0];
     DmcPickerViewController * dmc=[[DmcPickerViewController alloc] init];
     @try{
-        dmc.selectMode=[[options objectForKey:@"selectMode"]integerValue];
+        dmc.selectMode= 100; //[[options objectForKey:@"selectMode"]integerValue];
+        //100 for image, 101 for image + video, 102 for video.
     }@catch (NSException *exception) {
         NSLog(@"Exception: %@", exception);
     }
@@ -34,7 +36,7 @@
         NSLog(@"Exception: %@", exception);
     }
     @try{
-        dmc.maxSelectSize=[[options objectForKey:@"maxSelectSize"]integerValue];
+        dmc.maxSelectSize=  104857600;
     }@catch (NSException *exception) {
         NSLog(@"Exception: %@", exception);
     }
@@ -123,7 +125,6 @@
     
     if(photoWidth != 0 && photoHeight != 0) {
         CGSize imgSize = image.size;
-        CGImageRef imageRef = image.CGImage;
         
         CGFloat widthRatio = (CGFloat)photoWidth / imgSize.width;
         CGFloat heightRatio = (CGFloat)photoHeight / imgSize.height;
@@ -136,10 +137,45 @@
         }
         
         CGRect rect = CGRectMake(0, 0, newSize.width, newSize.height);
-        
+                
         UIGraphicsBeginImageContextWithOptions(newSize, false, 1.0f);
         CGContextRef context = UIGraphicsGetCurrentContext();
-        CGContextDrawImage(context, rect, imageRef);
+        
+        //CGContextTranslateCTM(context, 0, newSize.height);
+        //CGContextScaleCTM(context, 1.0, -1.0);
+        
+        UIGraphicsPushContext(context);
+        [image drawInRect:rect]; // UIImage will handle all especial cases!
+        UIGraphicsPopContext();
+        
+       // CGContextDrawImage(context, rect, imageRef);
+        /*
+        switch(orientationData) {
+            case kCGImagePropertyOrientationUp:
+                break;
+            case kCGImagePropertyOrientationDown:
+                CGContextRotateCTM(context,180.f);
+                break;
+            case kCGImagePropertyOrientationLeft:
+                CGContextRotateCTM(context,90);
+                break;
+            case kCGImagePropertyOrientationRight:
+                CGContextRotateCTM(context,270);
+                break;
+            case kCGImagePropertyOrientationUpMirrored:
+                CGContextScaleCTM(context, -1.f, -1.f);
+                break;
+            case kCGImagePropertyOrientationDownMirrored:
+                CGContextScaleCTM(context, 1.f, -1.f);
+                break;
+            case kCGImagePropertyOrientationLeftMirrored:
+                CGContextRotateCTM(context,90);
+                break;
+            case kCGImagePropertyOrientationRightMirrored:
+                CGContextScaleCTM(context, -1.f, 1.f);
+                break;
+        }
+         */
         
         image = UIGraphicsGetImageFromCurrentImageContext();
         UIGraphicsEndImageContext();
@@ -161,9 +197,12 @@
         [self.commandDelegate evalJs:compressCompletedjs];
     };
 
+    
+    
     [[PHImageManager defaultManager] requestImageDataForAsset:asset  options:options resultHandler:^(NSData * _Nullable imageData, NSString * _Nullable dataUTI, UIImageOrientation orientation, NSDictionary * _Nullable info) {
         if(imageData != nil) {
             NSString *filename=[asset valueForKey:@"filename"];
+            
             
             imageData = [self processImage:imageData];
 
@@ -176,7 +215,7 @@
                 [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[error localizedDescription]] callbackId:callbackId];
             } else {
                 
-                NSDictionary *dict=[NSDictionary dictionaryWithObjectsAndKeys:fullpath,@"src",[[NSURL fileURLWithPath:fullpath] absoluteString],@"uri",@"image",@"mediaType",size,@"size",[NSNumber numberWithInt:index],@"index", nil];
+                NSDictionary *dict=[NSDictionary dictionaryWithObjectsAndKeys:fullpath,@"src",[[NSURL fileURLWithPath:fullpath] absoluteString],@"src",@"image",@"mediaType",size,@"size",[NSNumber numberWithInt:index],@"index", nil];
                 [aListArray addObject:dict];
                 if([aListArray count]==[selectArray count]){
                     [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:aListArray] callbackId:callbackId];
@@ -448,8 +487,13 @@
 
 -(NSString *)getMIMETypeURLRequestAtPath:(NSString*)path
 {
+    //1.确定请求路径
     NSURL *url = [NSURL fileURLWithPath:path];
+    
+    //2.创建可变的请求对象
     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
+    
+    //3.发送请求
     NSHTTPURLResponse *response = nil;
     [NSURLConnection sendSynchronousRequest:request returningResponse:&response error:nil];
     
