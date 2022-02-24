@@ -176,7 +176,7 @@
                 [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[error localizedDescription]] callbackId:callbackId];
             } else {
                 
-                NSDictionary *dict=[NSDictionary dictionaryWithObjectsAndKeys:fullpath,@"path",[[NSURL fileURLWithPath:fullpath] absoluteString],@"uri",@"image",@"mediaType",size,@"size",[NSNumber numberWithInt:index],@"index", nil];
+                NSDictionary *dict=[NSDictionary dictionaryWithObjectsAndKeys:fullpath,@"src",[[NSURL fileURLWithPath:fullpath] absoluteString],@"uri",@"image",@"mediaType",size,@"size",[NSNumber numberWithInt:index],@"index", nil];
                 [aListArray addObject:dict];
                 if([aListArray count]==[selectArray count]){
                     [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:aListArray] callbackId:callbackId];
@@ -195,7 +195,7 @@
     NSString *key  = [command.arguments objectAtIndex: 1];
 
     NSData *imageData = [NSData dataWithContentsOfFile:path];
-    //UIImage * image= [[UIImage alloc] initWithContentsOfFile:[options objectForKey:@"path"] ];
+    //UIImage * image= [[UIImage alloc] initWithContentsOfFile:[options objectForKey:@"src"] ];
     CGImageSourceRef imageRef=CGImageSourceCreateWithData((CFDataRef)imageData, NULL);
     
     CFDictionaryRef imageInfo = CGImageSourceCopyPropertiesAtIndex(imageRef, 0,NULL);
@@ -233,7 +233,7 @@
                 [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[error localizedDescription]] callbackId:callbackId];
             } else {
                 
-                NSDictionary *dict=[NSDictionary dictionaryWithObjectsAndKeys:fullpath,@"path",[[NSURL fileURLWithPath:fullpath] absoluteString],@"uri",size,@"size",@"video",@"mediaType" ,[NSNumber numberWithInt:index],@"index", nil];
+                NSDictionary *dict=[NSDictionary dictionaryWithObjectsAndKeys:fullpath,@"src",[[NSURL fileURLWithPath:fullpath] absoluteString],@"uri",size,@"size",@"video",@"mediaType" ,[NSNumber numberWithInt:index],@"index", nil];
                 [aListArray addObject:dict];
                 if([aListArray count]==[selectArray count]){
                     [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:aListArray] callbackId:callbackId];
@@ -272,7 +272,7 @@
                 NSLog(@"completed!");
                 NSString *compressCompletedjs = [NSString stringWithFormat:@"MediaPicker.compressEvent('%@',%i)", @"completed",index];
                 [self.commandDelegate evalJs:compressCompletedjs];
-                NSDictionary *dict=[NSDictionary dictionaryWithObjectsAndKeys:fullpath,@"path",[[NSURL fileURLWithPath:fullpath] absoluteString],@"uri",@"video",@"mediaType" ,[NSNumber numberWithInt:index],@"index", nil];
+                NSDictionary *dict=[NSDictionary dictionaryWithObjectsAndKeys:fullpath,@"src",[[NSURL fileURLWithPath:fullpath] absoluteString],@"uri",@"video",@"mediaType" ,[NSNumber numberWithInt:index],@"index", nil];
                 [aListArray addObject:dict];
                 if([aListArray count]==[selectArray count]){
                     [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:aListArray] callbackId:callbackId];
@@ -356,7 +356,7 @@
 {
     callbackId=command.callbackId;
     NSMutableDictionary *options = [command.arguments objectAtIndex: 0];
-    UIImage * image=[self getThumbnailImage:[options objectForKey:@"path"] type:[options objectForKey:@"mediaType"]];
+    UIImage * image=[self getThumbnailImage:[options objectForKey:@"src"] type:[options objectForKey:@"mediaType"]];
     NSString *thumbnail=[self thumbnailImage:image quality:[[options objectForKey:@"thumbnailQuality"] integerValue]];
 
     [options setObject:thumbnail forKey:@"thumbnailBase64"];
@@ -370,7 +370,7 @@
 
     NSInteger quality=[[options objectForKey:@"quality"] integerValue];
     if(quality<100&&[@"image" isEqualToString: [options objectForKey:@"mediaType"]]){
-        UIImage *result = [[UIImage alloc] initWithContentsOfFile: [options objectForKey:@"path"]];
+        UIImage *result = [[UIImage alloc] initWithContentsOfFile: [options objectForKey:@"src"]];
         NSInteger qu = quality>0?quality:3;
         CGFloat q=qu/100.0f;
         NSData *data =UIImageJPEGRepresentation(result,q);
@@ -387,7 +387,7 @@
             NSLog(@"%@", [error localizedDescription]);
             [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[error localizedDescription]] callbackId:callbackId];
         } else {
-            [options setObject:fullpath forKey:@"path"];
+            [options setObject:fullpath forKey:@"src"];
             [options setObject:[[NSURL fileURLWithPath:fullpath] absoluteString] forKey:@"uri"];
             [options setObject:size forKey:@"size"];
             [options setObject:filename forKey:@"name"];
@@ -430,7 +430,7 @@
         url =  [NSURL fileURLWithPath:path];
     }
     NSMutableDictionary *options = [NSMutableDictionary dictionaryWithCapacity:5];
-    [options setObject:path forKey:@"path"];
+    [options setObject:path forKey:@"src"];
     [options setObject:url.absoluteString forKey:@"uri"];
 
     NSNumber * size = [NSNumber numberWithUnsignedLongLong:[[[NSFileManager defaultManager] attributesOfItemAtPath:path error:nil] fileSize]];
