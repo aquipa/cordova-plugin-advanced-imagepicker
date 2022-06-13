@@ -12,17 +12,19 @@
 - (void)present:(CDVInvokedUrlCommand*)command;
 - (void)takePhoto:(CDVInvokedUrlCommand*)command;
 - (void)extractThumbnail:(CDVInvokedUrlCommand*)command;
-- (NSData *)processImage:(NSData*)imageData;
+- (UIImage *)processImage:(UIImage*)image;
 
 //writeToFile:(NSString *)path options:(NSDataWritingOptions)writeOptionsMask error:(NSError **)errorPtr;
 @end
 
 @implementation AdvancedImagePicker
 
+NSDictionary *currentOptions;
+
 - (void)present:(CDVInvokedUrlCommand*)command
 {
     callbackId=command.callbackId;
-    NSDictionary *options = [command.arguments objectAtIndex: 0];
+    currentOptions = [command.arguments objectAtIndex: 0];
     DmcPickerViewController * dmc=[[DmcPickerViewController alloc] init];
     @try{
         dmc.selectMode= 100; //[[options objectForKey:@"selectMode"]integerValue];
@@ -31,7 +33,7 @@
         NSLog(@"Exception: %@", exception);
     }
     @try{
-        dmc.maxSelectCount=[[options objectForKey:@"max"]integerValue];
+        dmc.maxSelectCount=[[currentOptions objectForKey:@"max"]integerValue];
     }@catch (NSException *exception) {
         NSLog(@"Exception: %@", exception);
     }
@@ -42,13 +44,13 @@
     }
     
     @try{
-        photoWidth = [[options objectForKey:@"width"]integerValue];
+        photoWidth = [[currentOptions objectForKey:@"width"]integerValue];
     }@catch (NSException *exception) {
         photoWidth = 0;
     }
     
     @try{
-        photoHeight = [[options objectForKey:@"height"]integerValue];
+        photoHeight = [[currentOptions objectForKey:@"height"]integerValue];
     }@catch (NSException *exception) {
         photoHeight = 0;
     }
@@ -118,9 +120,7 @@
  UIGraphicsEndImageContext()
  */
 
--(NSData*)processImage:(NSData*)imageData {
-    
-    UIImage* image = [UIImage imageWithData:imageData];
+-(UIImage*)processImage:(UIImage*)image {
     
     
     if(photoWidth != 0 && photoHeight != 0) {
@@ -181,9 +181,8 @@
         UIGraphicsEndImageContext();
         
     }
-    imageData = UIImageJPEGRepresentation(image, 0.8f);
     
-    return imageData;
+    return image;
 }
 
 -(void)imageToSandbox:(PHAsset *)asset dmcPickerPath:(NSString*)dmcPickerPath aListArray:(NSMutableArray*)aListArray selectArray:(NSMutableArray*)selectArray index:(int)index{
@@ -203,19 +202,44 @@
         if(imageData != nil) {
             NSString *filename=[asset valueForKey:@"filename"];
             
+            float quality = 0.8;
             
-            imageData = [self processImage:imageData];
+            @try{
+                quality=[[currentOptions objectForKey:@"quality"]integerValue]/100;
+            }@catch (NSException *exception) {
+                NSLog(@"Exception: %@", exception);
+            }
+            
+            
+            imageData = UIImageJPEGRepresentation([self processImage:[UIImage imageWithData:imageData]], quality);
 
+            bool asBase64 = false;
+            @try{
+                asBase64=[[currentOptions objectForKey:@"asBase64"]boolValue];
+            }@catch (NSException *exception) {
+                NSLog(@"Exception: %@", exception);
+            }
+            
+            if(!asBase64){
             NSString *fullpath=[NSString stringWithFormat:@"%@/%@%@.jpg", dmcPickerPath,[[NSProcessInfo processInfo] globallyUniqueString], filename];
             NSNumber *size=[NSNumber numberWithLong:imageData.length];
 
             NSError *error = nil;
             if (![imageData writeToFile:fullpath options:NSAtomicWrite error:&error]) {
                 NSLog(@"%@", [error localizedDescription]);
-                [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[error localizedDescription]] callbackId:callbackId];
+                [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[error localizedDescription]] callbackId:self->callbackId];
             } else {
                 
                 NSDictionary *dict=[NSDictionary dictionaryWithObjectsAndKeys:fullpath,@"src",[[NSURL fileURLWithPath:fullpath] absoluteString],@"src",@"image",@"mediaType",size,@"size",[NSNumber numberWithInt:index],@"index", nil];
+                [aListArray addObject:dict];
+                if([aListArray count]==[selectArray count]){
+                    [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:aListArray] callbackId:callbackId];
+                }
+            }
+            } else {
+                
+                NSNumber *size=[NSNumber numberWithLong:imageData.length];
+                NSDictionary *dict=[NSDictionary dictionaryWithObjectsAndKeys:[NSString stringWithFormat:@"%@%@", @"data:image/jpeg;base64,", [imageData base64EncodedStringWithOptions:NSDataBase64Encoding64CharacterLineLength] ],@"src",@"image",@"mediaType",@"true",@"isBase64",size,@"size",[NSNumber numberWithInt:index],@"index", nil];
                 [aListArray addObject:dict];
                 if([aListArray count]==[selectArray count]){
                     [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:aListArray] callbackId:callbackId];
