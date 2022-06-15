@@ -161,7 +161,7 @@ public class AdvancedImagePicker extends CordovaPlugin {
                         resultMap.put("isBase64", asBase64);
                         if (asBase64) {
                             try {
-                                resultMap.put("src", type.equals("video") ? this.encodeVideo(uri) : this.encodeImage(uri, asJpeg, width, height));
+                                resultMap.put("src", type.equals("video") ? this.encodeVideo(uri) : "data:image/jpeg;base64," + this.encodeImage(uri, asJpeg, width, height));
                             } catch (Exception e) {
                                 e.printStackTrace();
                                 this.returnError(AdvancedImagePickerErrorCodes.UnknownError, e.getMessage());
