@@ -28,8 +28,8 @@
     
 - (void)viewDidLoad {
     //init config
-    self.maxSelectCount=self.maxSelectCount>0?self.maxSelectCount:40;
-    self.maxSelectSize=self.maxSelectSize>0?self.maxSelectSize:104857600;
+    self.maxSelectCount=self.maxSelectCount>0?self.maxSelectCount:15;
+    self.maxSelectSize=self.maxSelectSize>0?self.maxSelectSize:1048576;
     self.selectMode=self.selectMode>0?self.selectMode:101;
     //config end
     
@@ -458,7 +458,7 @@
 		PHImageRequestOptions * options = [[PHImageRequestOptions alloc] init];
 		options.deliveryMode = PHImageRequestOptionsDeliveryModeHighQualityFormat;
 		options.resizeMode = PHImageRequestOptionsResizeModeExact;
-		options.synchronous = YES; //Set this to NO if is needed
+		options.synchronous = NO; //Set this to NO if is needed
 
     	[[PHImageManager defaultManager] requestImageDataForAsset:asset options:options resultHandler:^(NSData * _Nullable imageData, NSString * _Nullable dataUTI, UIImageOrientation orientation, NSDictionary * _Nullable info) {
 		    NSLog(@"%lu", (unsigned long)imageData.length);
